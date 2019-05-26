@@ -3,6 +3,7 @@ import sublime_plugin
 import re
 import time
 import html
+import ntpath
 
 lastSymbol = None
 lastStartTime = time.time()
@@ -426,6 +427,16 @@ class ShowDefinitionExCommand(sublime_plugin.WindowCommand):
 			if has_more:
 				content += '<br /><br /><a href=more><n>click to see more ...</n></a>'
 
+			# Get color from color scheme for syntax (keyword and variable)
+			syntax = ntpath.basename(hover_view.settings().get('syntax'))
+			is_cpp = syntax == "C++.sublime-syntax"
+			color_func = "#FFFB9D" # yellow
+			color_var = "#FFFFFF" # white
+			if (is_cpp):
+				# Visual Studio color scheme (white background)
+				color_func = "#0000FF" # blue
+				color_var = "#000000" # black
+
 			body = """
 				<body id=show-definitions>
 					<style>
@@ -438,12 +449,12 @@ class ShowDefinitionExCommand(sublime_plugin.WindowCommand):
 							margin: 0 0 0.25em 0;
 						}
 						m {
-							color: #FFFB9D;
+							color: %s;
 							text-decoration: none;
 						}
 						code {
 							font-family: monospace;
-							color: #FFFFFF;
+							color: %s;
 							text-decoration: none;
 						}
 						i {
@@ -461,7 +472,7 @@ class ShowDefinitionExCommand(sublime_plugin.WindowCommand):
 				<h1>Definition of <m>%s</m> %s:</h1>
 				<p>%s</p>
 				</body>
-			""" % (self.em*2, self.symbol, '' if not has_more else '%d/%d' % (self.start, len(self.symbol_list)), content)
+			""" % (color_func, color_var, self.em*2, self.symbol, '' if not has_more else '%d/%d' % (self.start, len(self.symbol_list)), content)
 			if self.first_show:
 				hover_view.show_popup(body, sublime.HIDE_ON_MOUSE_MOVE_AWAY, location= self.point, max_width= self.max_popup_width, max_height= self.max_popup_height, on_navigate= self.on_navigate)
 			else:
